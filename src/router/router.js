@@ -1,7 +1,11 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-// import Login from '@/views/Login.vue'
 Vue.use(VueRouter)
+// 双击同一路由报错
+const originalPush = VueRouter.prototype.push
+VueRouter.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err)
+}
 
 const routes = [
   {
@@ -16,7 +20,54 @@ const routes = [
   {
     path: '/home',
     name: 'AppHome',
-    component: () => import(/* webpackChunkName: "about" */ '@/views/Home.vue')
+    component: () => import(/* webpackChunkName: "about" */ '@/views/Home.vue'),
+    // 进入/home 就跳转到 /welcome
+    redirect: '/welcome',
+    children: [
+      // welcome
+      {
+        path: '/welcome',
+        name: 'HomeWelcome',
+        component: () => import(/* webpackChunkName: "about" */ '@/views/Welcome.vue')
+      },
+      // 用户管理
+      {
+        path: '/users',
+        component: () => import(/* webpackChunkName: "about" */ '@/views/users/Users.vue')
+      },
+      // 权限管理
+      {
+        path: '/rights',
+        component: () => import(/* webpackChunkName: "about" */ '@/views/authority/Rights.vue')
+      },
+      {
+        path: '/roles',
+        component: () => import(/* webpackChunkName: "about" */ '@/views/authority/Roles.vue')
+      },
+      // 商品管理
+      {
+        path: '/goods',
+        component: () => import(/* webpackChunkName: "about" */ '@/views/product/Goods.vue')
+      },
+      {
+        path: '/params',
+        component: () => import(/* webpackChunkName: "about" */ '@/views/product/Params.vue')
+      },
+      {
+        path: '/categories',
+        component: () => import(/* webpackChunkName: "about" */ '@/views/product/Categories.vue')
+      },
+      // 订单管理
+      {
+        path: '/orders',
+        component: () => import(/* webpackChunkName: "about" */ '@/views/orders/Orders.vue')
+      },
+      // 数据统计
+      {
+        path: '/reports',
+        component: () => import(/* webpackChunkName: "about" */ '@/views/reports/Reports.vue')
+      }
+    ]
   }
 ]
 
