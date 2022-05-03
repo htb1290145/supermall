@@ -50,10 +50,15 @@
                   type="primary"
                   icon="el-icon-edit"
                   size="mini"
-                  @click="editBtn(scope.row)"
+                  @click="editBtn(scope.row.id)"
                 ></el-button>
                 <!-- 删除 -->
-                <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+                <el-button
+                  type="danger"
+                  icon="el-icon-delete"
+                  size="mini"
+                  @click="deleBtn(scope.row.id)"
+                ></el-button>
                 <!-- 分类角色 -->
                 <el-tooltip
                   class="item"
@@ -81,7 +86,7 @@
       >
       </el-pagination>
     </el-card>
-    <!-- 弹出添加用户框 -->
+    <!-- 添加用户对话框 -->
     <el-dialog title="添加用户" :visible.sync="addUserVisible" width="70%" @close="addDialogClose">
       <!-- 表单区域——验证规则  -->
       <el-form
@@ -99,8 +104,8 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="addUserForm.email"></el-input>
         </el-form-item>
-        <el-form-item label="手机" prop="phone">
-          <el-input v-model="addUserForm.phone"></el-input>
+        <el-form-item label="手机" prop="mobile">
+          <el-input v-model="addUserForm.mobile"></el-input>
         </el-form-item>
       </el-form>
       <!-- 底部区域 -->
@@ -109,7 +114,7 @@
         <el-button type="primary" @click="addUser">确 定</el-button>
       </span>
     </el-dialog>
-    <!-- 弹出修改用户信息框 -->
+    <!-- 修改用户信息对话框 -->
     <el-dialog
       ref="editUserFormRef"
       title="修改用户信息"
@@ -130,8 +135,8 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="editUserForm.email"></el-input>
         </el-form-item>
-        <el-form-item label="手机" prop="phone">
-          <el-input v-model="editUserForm.phone"></el-input>
+        <el-form-item label="手机" prop="mobile">
+          <el-input v-model="editUserForm.mobile"></el-input>
         </el-form-item>
       </el-form>
       <!-- 底部区域 -->
@@ -180,7 +185,7 @@ export default {
         username: '',
         password: '',
         email: '',
-        phone: ''
+        mobile: ''
       },
       // 添加用户表单验证规则
       addUserFormRules: {
@@ -196,7 +201,7 @@ export default {
           { required: true, message: '请输入邮箱', trigger: 'blur' },
           { validator: checkEmail, trigger: 'blur' }
         ],
-        phone: [
+        mobile: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
           { validator: checkPhone, trigger: 'blur' }
         ]
@@ -204,12 +209,7 @@ export default {
       // 弹出修改用户信息框
       editUserVisible: false,
       // 修改用户表单
-      editUserForm: {
-        id: '',
-        username: '',
-        email: '',
-        phone: ''
-      },
+      editUserForm: {},
       // 修改用户表单验证规则
       editUserFormRules: {
         username: [
@@ -265,7 +265,7 @@ export default {
     addDialogClose() {
       this.$refs.addUserFormRef.resetFields()
     },
-    // 添加用户前的表单预验证
+    // 添加用户+表单预验证
     addUser() {
       // 预验证并发起网络请求添加用户
       this.$refs.addUserFormRef.validate(async validate => {
@@ -281,24 +281,63 @@ export default {
       })
       // 隐藏dialog
       this.addUserVisible = false
+      this.queryInfo.pagenum = 1
       // 重新渲染用户列表
       this.getUsersList()
     },
-    editBtn(userInfo) {
-      console.log(userInfo)
-      this.editUserForm.username = userInfo.username
+    // 展示编辑用户的对话框
+    async editBtn(id) {
+      const { data: res } = await this.$http.get('users/' + id)
+      this.editUserForm = res.data
       this.editUserVisible = true
     },
-    // 修改用户信息
+    // 修改用户信息+表单预验证
     editUser() {
-      console.log('editUser')
-      this.$http.put(`users/${this.editUserForm.username}`).then(res => {
-        console.log(res)
+      // 预验证并发起网络请求修改用户信息
+      this.$refs.editUserFormRef.validate(async validate => {
+        if (!validate) return false
+        // 发起修改用户信息的数据请求
+        const { data: res } = await this.$http.put('users/' + this.editUserForm.id, {
+          email: this.editUserForm.email,
+          mobile: this.editUserForm.mobile
+        })
+        if (res.meta.status !== 200) {
+          return this.$message.error(res.meta.msg)
+        }
+      })
+      // 隐藏dialog
+      this.editUserVisible = false
+      // 重新渲染用户列表
+      this.getUsersList()
+      this.$message({
+        message: '用户修改成功',
+        type: 'success'
       })
     },
     // 关闭修改用户信息弹出框，并表单重置
     editDialogClose() {
       this.$refs.editUserFormRef.resetFields()
+    },
+    // 删除用户按钮
+    deleBtn(id) {
+      this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          this.$http.delete('users/' + id).then(res => {
+            if (res.data.meta.status !== 200) {
+              return this.$message.error(res.data.meta.msg)
+            }
+            this.$message.success('删除成功')
+            this.queryInfo.pagenum = 1
+            this.getUsersList()
+          })
+        })
+        .catch(() => {
+          this.$message.info('取消删除')
+        })
     }
   }
 }
@@ -316,7 +355,6 @@ export default {
     border: none;
     background-color: #fff;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15) !important;
-
     .el-table {
       margin-top: 20px;
     }
