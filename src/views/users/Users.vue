@@ -282,6 +282,7 @@ export default {
       if (res.meta.status !== 200) {
         return this.$message.console.error('获取用户信息失败！')
       }
+      this.$message.success('列表更新')
       this.usersList = res.data.users
       this.total = res.data.total
     },
@@ -407,12 +408,14 @@ export default {
         this.$message.success(res.data.meta.msg)
       })
       this.assignRoleVisible = false
+      this.getUsersList()
     },
     // 分配角色对话框关闭
     assignRoleDialogClose() {
       // 重置
       this.selectRoleId = ''
       this.userInfo = {}
+      console.log(11)
     }
   }
 }
