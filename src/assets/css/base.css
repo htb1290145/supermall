@@ -17,6 +17,10 @@ body,
   /* 屏幕最小宽度1366px */
   min-width: 1366px;
 }
+/* 级联选择器 */
+.el-cascader-panel {
+  height: 200px;
+}
 
 *,
 *::before,

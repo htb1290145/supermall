@@ -7,6 +7,8 @@ import './plugins/element.js'
 import '@/assets/css/base.css'
 // 字体图标
 import '@/assets/css/fonts/iconfont.css'
+// tree-table
+import ZkTable from 'vue-table-with-tree-grid'
 
 // axios
 import axios from 'axios'
@@ -17,6 +19,7 @@ axios.interceptors.request.use(config => {
   return config
 })
 Vue.prototype.$http = axios
+Vue.use(ZkTable)
 
 Vue.config.productionTip = false
 
